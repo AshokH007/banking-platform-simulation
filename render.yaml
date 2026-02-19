@@ -17,7 +17,7 @@ services:
         fromService:
           type: web
           name: banking-platform-ui
-          property: host
+          property: url
       - key: TOKEN_EXPIRY
         value: 30m
     rootDir: server
@@ -37,7 +37,7 @@ services:
         fromService:
           type: web
           name: banking-platform-simulation
-          property: host
+          property: url
       - key: NODE_VERSION
         value: 20
     rootDir: client

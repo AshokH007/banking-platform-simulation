@@ -44,6 +44,13 @@ export const AuthProvider = ({ children }) => {
             setUser(user);
             return true;
         } catch (err) {
+            console.group('🏦 Authentication Failure Diagnostic');
+            console.error('Target URL:', `${API_BASE}/api/auth/login`);
+            console.error('Status:', err.response?.status);
+            console.error('Data:', err.response?.data);
+            console.error('Network Error:', err.message);
+            console.groupEnd();
+
             setError(err.response?.data?.message || 'Authentication service failure');
             return false;
         }
