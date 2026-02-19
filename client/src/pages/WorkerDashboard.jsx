@@ -189,4 +189,3 @@ const WorkerDashboard = () => {
 };
 
 export default WorkerDashboard;
-```
