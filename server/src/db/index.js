@@ -77,18 +77,60 @@ async function initializeDatabase() {
         sender_id UUID REFERENCES banking.users(id),
         receiver_id UUID REFERENCES banking.users(id),
         amount NUMERIC(12, 2) NOT NULL CHECK (amount > 0),
-        type VARCHAR(20) NOT NULL CHECK (type IN ('TRANSFER', 'DEPOSIT', 'WITHDRAWAL')),
+        type VARCHAR(20) NOT NULL CHECK (type IN ('TRANSFER', 'DEPOSIT', 'WITHDRAWAL', 'BILL_PAY')),
         status VARCHAR(20) DEFAULT 'COMPLETED' CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED')),
         reference TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
     `);
 
-    // 6. Indices
+    // 6. Loans Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS banking.loans (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES banking.users(id),
+        amount NUMERIC(12, 2) NOT NULL,
+        apr NUMERIC(5, 2) DEFAULT 5.50,
+        term_months INTEGER NOT NULL,
+        status VARCHAR(20) DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED', 'PAID')),
+        purpose TEXT,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 7. Bills Table (Pre-seeded utilities)
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS banking.bills (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES banking.users(id),
+        biller_name VARCHAR(100) NOT NULL,
+        amount NUMERIC(12, 2) NOT NULL,
+        due_date DATE NOT NULL,
+        status VARCHAR(20) DEFAULT 'UNPAID' CHECK (status IN ('UNPAID', 'PAID')),
+        category VARCHAR(50),
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 8. Notifications Table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS banking.notifications (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id UUID REFERENCES banking.users(id),
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
+    // 9. Indices
     await pool.query('CREATE INDEX IF NOT EXISTS idx_users_email ON banking.users(email)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_users_customer_id ON banking.users(customer_id)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_transactions_sender ON banking.transactions(sender_id)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_transactions_receiver ON banking.transactions(receiver_id)');
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_loans_user ON banking.loans(user_id)');
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_bills_user ON banking.bills(user_id)');
 
     // 6. Seed Default Users (Upsert pattern for reliable role provisioning)
     console.log('👤 Synchronizing production identities...');
