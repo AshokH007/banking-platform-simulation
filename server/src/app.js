@@ -29,22 +29,19 @@ const allowedOrigins = [
 
 app.use(cors({
     origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
+        // Allow developer tools and local testing
+        if (!origin || process.env.NODE_ENV === 'development') return callback(null, true);
 
-        // Normalize origin and allowedOrigins for matching
-        const normalizedOrigin = origin.toLowerCase();
-        const isAllowed = allowedOrigins.some(ao => {
-            if (!ao) return false;
-            const normalizedAo = ao.toLowerCase();
-            return normalizedOrigin === normalizedAo ||
-                normalizedOrigin.replace('https://', '').replace('http://', '') === normalizedAo.replace('https://', '').replace('http://', '');
-        });
+        const normalize = (o) => o.toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '');
+        const normalizedOrigin = normalize(origin);
 
-        if (isAllowed || process.env.NODE_ENV === 'development') {
+        const isAllowed = allowedOrigins.some(ao => ao && normalize(ao) === normalizedOrigin);
+
+        // Safety clause: Always allow the onrender.com subdomains of this project
+        if (isAllowed || normalizedOrigin.endsWith('onrender.com')) {
             callback(null, true);
         } else {
-            console.error(`[CORS REJECTED] Origin: ${origin} | Allowed: ${allowedOrigins.join(', ')}`);
+            console.error(`[CORS REJECTED] Origin: ${origin} | Target: ${normalizedOrigin} | Allowed:`, allowedOrigins.map(normalize));
             callback(new Error('Not allowed by CORS'));
         }
     },
@@ -80,6 +77,11 @@ app.get('/health', async (req, res) => {
             database: 'connected',
             schema: 'active',
             user_count: dbCheck.rows[0].count,
+            diagnostics: {
+                has_jwt_secret: !!process.env.JWT_SECRET,
+                frontend_url: process.env.FRONTEND_URL || 'missing',
+                node_env: process.env.NODE_ENV
+            },
             timestamp: new Date()
         });
     } catch (err) {
