@@ -1,7 +1,7 @@
 services:
   # 1. Backend API Service
   - type: web
-    name: banking-platform-api
+    name: banking-platform-simulation
     plan: free
     runtime: node
     buildCommand: npm install
@@ -36,7 +36,7 @@ services:
       - key: VITE_API_URL
         fromService:
           type: web
-          name: banking-platform-api
+          name: banking-platform-simulation
           property: host
       - key: NODE_VERSION
         value: 20
