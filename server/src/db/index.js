@@ -84,6 +84,17 @@ async function initializeDatabase() {
       )
     `);
 
+    // Check if BILL_PAY type exists in constraints
+    try {
+      await pool.query(`
+        ALTER TABLE banking.transactions 
+        DROP CONSTRAINT IF EXISTS transactions_type_check,
+        ADD CONSTRAINT transactions_type_check CHECK (type IN ('TRANSFER', 'DEPOSIT', 'WITHDRAWAL', 'BILL_PAY'))
+      `);
+    } catch (e) {
+      console.log('⚠️ Migration note: Transactions constraint update skipped or already applied.');
+    }
+
     // 6. Loans Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS banking.loans (
