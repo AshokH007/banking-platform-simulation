@@ -60,13 +60,11 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.get('/', (req, res) => {
     res.status(200).json({
         message: 'FinTech Banking Platform API',
-        environment: 'Production',
+        version: '1.0.5-DIAGNOSTIC',
         status: 'Operational',
-        documentation: 'https://github.com/AshokH007/banking-platform-simulation',
         endpoints: {
-            health: '/health',
-            auth: '/api/auth',
-            account: '/api/account'
+            ping: '/api/staff/ping',
+            health: '/health'
         }
     });
 });
