@@ -11,6 +11,8 @@ const WorkerDashboard = () => {
         { label: 'Daily Transfers', value: '$2.4M', grow: '+5.4%' }
     ];
 
+    const firstName = user?.fullName?.split(' ')[0] || 'Staff';
+
     return (
         <div className="max-w-6xl mx-auto px-4 py-8 bg-indigo-50/30 min-h-screen">
             <header className="mb-12 flex justify-between items-end">
@@ -20,7 +22,7 @@ const WorkerDashboard = () => {
                         <h2 className="text-indigo-900 text-sm font-medium">Control Center</h2>
                     </div>
                     <h1 className="text-4xl font-bold text-slate-900 tracking-tight">
-                        Welcome back, {user?.fullName.split(' ')[0]}
+                        Welcome back, {firstName}
                     </h1>
                 </div>
                 <div className="text-right">

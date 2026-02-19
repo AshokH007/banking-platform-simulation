@@ -3,13 +3,12 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 
 const Dashboard = () => {
-    const { user } = useAuth();
+    const { user, API_BASE } = useAuth();
     const [accountData, setAccountData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchBalance = async () => {
-            const API_BASE = import.meta.env.VITE_API_URL || '';
             try {
                 const response = await axios.get(`${API_BASE}/api/account/balance`);
                 setAccountData(response.data);
