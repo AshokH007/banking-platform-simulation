@@ -6,6 +6,8 @@ const morgan = require('morgan');
 // Import routes
 const authRoutes = require('./routes/auth');
 const accountRoutes = require('./routes/account');
+const transactionRoutes = require('./routes/transactions');
+const { authenticate } = require('./middleware/auth');
 
 // Database connection
 const { pool: dbPool } = require('./db');
