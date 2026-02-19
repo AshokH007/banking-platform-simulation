@@ -14,7 +14,7 @@ services:
         value: production
       - key: FRONTEND_URL
         fromService:
-          type: static_site
+          type: web
           name: banking-platform-ui
           property: host
       - key: TOKEN_EXPIRY
@@ -22,11 +22,11 @@ services:
     rootDir: server
 
   # 2. Frontend Static Site
-  - type: static_site
+  - type: web
     name: banking-platform-ui
     env: static
     buildCommand: npm install && npm run build
-    publishPath: dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         fromService:
