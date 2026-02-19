@@ -13,7 +13,10 @@ services:
       - key: NODE_ENV
         value: production
       - key: FRONTEND_URL
-        sync: false # Update this with the static site URL once live
+        fromService:
+          type: static
+          name: banking-platform-ui
+          property: host
       - key: TOKEN_EXPIRY
         value: 30m
     rootDir: server

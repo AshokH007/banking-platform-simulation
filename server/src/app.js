@@ -39,8 +39,10 @@ app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 // Basic Root Route
 app.get('/', (req, res) => {
     res.status(200).json({
-        message: 'Banking Platform API - Production Environment',
-        status: 'Active',
+        message: 'FinTech Banking Platform API',
+        environment: 'Production',
+        status: 'Operational',
+        documentation: 'https://github.com/AshokH007/banking-platform-simulation',
         endpoints: {
             health: '/health',
             auth: '/api/auth',
