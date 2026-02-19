@@ -17,6 +17,8 @@ services:
         value: https://banking-platform-ui.onrender.com
       - key: TOKEN_EXPIRY
         value: 30m
+      - key: NODE_VERSION
+        value: 20
     rootDir: server
 
   # 2. Frontend Static Site

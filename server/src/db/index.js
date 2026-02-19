@@ -145,7 +145,7 @@ async function initializeDatabase() {
 
     // 6. Seed Default Users (Upsert pattern for reliable role provisioning)
     console.log('👤 Synchronizing production identities...');
-    const bcrypt = require('bcrypt');
+    const bcrypt = require('bcryptjs');
     const hash = await bcrypt.hash('SecurePass123', 12);
 
     // Ensure Client exists
