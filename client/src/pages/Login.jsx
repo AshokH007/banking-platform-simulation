@@ -1,20 +1,9 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { clsx } from 'clsx';
 
 const Login = () => {
-    const [identifier, setIdentifier] = useState('');
-    const [password, setPassword] = useState('');
-    const [role, setRole] = useState('CLIENT'); // CLIENT or STAFF
-    const [isLoading, setIsLoading] = useState(false);
-    const { login, error } = useAuth();
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setIsLoading(true);
-        await login(identifier, password);
-        setIsLoading(false);
-    };
 
     const isStaff = role === 'STAFF';
 
