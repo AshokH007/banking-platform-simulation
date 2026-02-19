@@ -22,7 +22,7 @@ async function runVerification() {
         const loginRes = await fetch(`${API_URL}/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: 'demo@example.com', password: 'password123' })
+            body: JSON.stringify({ identifier: 'john@bank.com', password: 'SecurePass123' })
         });
 
         if (!loginRes.ok) throw new Error(`Login failed: ${loginRes.status} ${loginRes.statusText}`);
