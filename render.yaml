@@ -1,4 +1,5 @@
 services:
+  # 1. Backend API Service
   - type: web
     name: banking-platform-api
     runtime: node
@@ -6,13 +7,27 @@ services:
     startCommand: npm start
     envVars:
       - key: DATABASE_URL
-        sync: false # Set in Render Dashboard
+        sync: false
       - key: JWT_SECRET
-        sync: false # Set in Render Dashboard
+        sync: false
       - key: NODE_ENV
         value: production
       - key: FRONTEND_URL
-        sync: false # Set in Render Dashboard (e.g. your Netlify/Vercel URL)
+        sync: false # Update this with the static site URL once live
       - key: TOKEN_EXPIRY
         value: 30m
     rootDir: server
+
+  # 2. Frontend Static Site
+  - type: static
+    name: banking-platform-ui
+    env: static
+    buildCommand: npm install && npm run build
+    publishPath: dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: banking-platform-api
+          property: host
+    rootDir: client
