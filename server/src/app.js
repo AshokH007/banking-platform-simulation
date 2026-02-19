@@ -13,8 +13,12 @@ const app = express();
 app.use(helmet());
 
 // Dynamic CORS Configuration
+const rawFrontendUrl = process.env.FRONTEND_URL;
 const allowedOrigins = [
-    process.env.FRONTEND_URL,
+    rawFrontendUrl,
+    // Add protocol versions for CORS matching
+    rawFrontendUrl && !rawFrontendUrl.startsWith('http') ? `https://${rawFrontendUrl}` : null,
+    rawFrontendUrl && !rawFrontendUrl.startsWith('http') ? `http://${rawFrontendUrl}` : null,
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:5175'
@@ -24,9 +28,14 @@ app.use(cors({
     origin: (origin, callback) => {
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+
+        // Check exact match or hostname match
+        const isAllowed = allowedOrigins.some(ao => ao === origin || origin.includes(ao));
+
+        if (isAllowed || process.env.NODE_ENV === 'development') {
             callback(null, true);
         } else {
+            console.warn(`[CORS Denied] Origin: ${origin}`);
             callback(new Error('Not allowed by CORS'));
         }
     },
