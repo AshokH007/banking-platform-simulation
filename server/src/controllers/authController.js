@@ -47,7 +47,7 @@ const login = async (req, res, next) => {
 
         // Generate Short-lived Token (30 minutes)
         const token = jwt.sign(
-            { id: user.id, email: user.email, customer_id: user.customer_id },
+            { id: user.id, email: user.email, customer_id: user.customer_id, role: user.role },
             process.env.JWT_SECRET,
             { expiresIn: '30m' }
         );
@@ -66,7 +66,8 @@ const login = async (req, res, next) => {
                 fullName: user.full_name,
                 email: user.email,
                 customerId: user.customer_id,
-                accountNumber: user.account_number
+                accountNumber: user.account_number,
+                role: user.role
             }
         });
 

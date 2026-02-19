@@ -38,11 +38,24 @@ async function initializeDatabase() {
         full_name VARCHAR(100) NOT NULL,
         email VARCHAR(255) UNIQUE NOT NULL,
         password_hash VARCHAR(255) NOT NULL,
+        role VARCHAR(20) DEFAULT 'CLIENT' CHECK (role IN ('CLIENT', 'STAFF')),
         balance NUMERIC(12, 2) DEFAULT 0.00 CHECK (balance >= 0),
         status VARCHAR(20) DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'BLOCKED')),
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
     `);
+
+    // Check if role column exists (for migration of existing production DB)
+    const roleColCheck = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_schema = 'banking' AND table_name = 'users' AND column_name = 'role'
+    `);
+
+    if (roleColCheck.rows.length === 0) {
+      console.log('🔄 Migrating database: Adding role column...');
+      await pool.query("ALTER TABLE banking.users ADD COLUMN role VARCHAR(20) DEFAULT 'CLIENT' CHECK (role IN ('CLIENT', 'STAFF'))");
+    }
 
     // 4. Auth Tokens Table
     await pool.query(`
@@ -61,16 +74,24 @@ async function initializeDatabase() {
     await pool.query('CREATE INDEX IF NOT EXISTS idx_users_email ON banking.users(email)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_users_customer_id ON banking.users(customer_id)');
 
-    // 6. Seed Default User if empty
+    // 6. Seed Default Users if empty
     const userCount = await pool.query('SELECT COUNT(*) FROM banking.users');
     if (userCount.rows[0].count === '0') {
-      console.log('👤 Seeding default production user...');
+      console.log('👤 Seeding default production identities (Client & Staff)...');
       const bcrypt = require('bcrypt');
       const hash = await bcrypt.hash('SecurePass123', 12);
+
+      // Seed Client
       await pool.query(`
-        INSERT INTO banking.users (customer_id, account_number, full_name, email, password_hash, balance)
+        INSERT INTO banking.users (customer_id, account_number, full_name, email, password_hash, balance, role)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `, ['CUST7742', 'ACC-921-008', 'John Doe', 'john@bank.com', hash, 25400.50, 'CLIENT']);
+
+      // Seed Staff
+      await pool.query(`
+        INSERT INTO banking.users (customer_id, account_number, full_name, email, password_hash, role)
         VALUES ($1, $2, $3, $4, $5, $6)
-      `, ['CUST7742', 'ACC-921-008', 'John Doe', 'john@bank.com', hash, 25400.50]);
+      `, ['EMP-101', 'OFFICE-MAIN', 'Bank Admin', 'admin@bank.com', hash, 'STAFF']);
     }
 
     console.log('✅ Database Initialization Complete.');

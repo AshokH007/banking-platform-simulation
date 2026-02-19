@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Layout from './layouts/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import WorkerDashboard from './pages/WorkerDashboard';
 
 const ProtectedRoute = () => {
   const { user, isLoading } = useAuth();
@@ -18,6 +19,12 @@ const ProtectedRoute = () => {
   return user ? <Outlet /> : <Navigate to="/login" replace />;
 };
 
+const DashboardRedirect = () => {
+  const { user } = useAuth();
+  if (user?.role === 'STAFF') return <WorkerDashboard />;
+  return <Dashboard />;
+};
+
 function App() {
   return (
     <Router>
@@ -27,7 +34,7 @@ function App() {
             <Route path="/login" element={<Login />} />
 
             <Route element={<ProtectedRoute />}>
-              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/dashboard" element={<DashboardRedirect />} />
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
             </Route>
 
