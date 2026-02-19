@@ -72,14 +72,11 @@ app.get('/', (req, res) => {
 app.get('/health', async (req, res) => {
     try {
         const dbCheck = await dbPool.query('SELECT COUNT(*) FROM banking.users');
-        const usersCheck = await dbPool.query('SELECT email, role FROM banking.users');
-
         res.status(200).json({
             status: 'ok',
             database: 'connected',
             schema: 'active',
             user_count: dbCheck.rows[0].count,
-            available_users: usersCheck.rows.map(u => ({ email: u.email, role: u.role })),
             diagnostics: {
                 has_jwt_secret: !!process.env.JWT_SECRET,
                 node_env: process.env.NODE_ENV

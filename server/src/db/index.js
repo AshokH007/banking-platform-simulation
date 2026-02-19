@@ -74,25 +74,26 @@ async function initializeDatabase() {
     await pool.query('CREATE INDEX IF NOT EXISTS idx_users_email ON banking.users(email)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_users_customer_id ON banking.users(customer_id)');
 
-    // 6. Seed Default Users if empty
-    const userCount = await pool.query('SELECT COUNT(*) FROM banking.users');
-    if (userCount.rows[0].count === '0') {
-      console.log('👤 Seeding default production identities (Client & Staff)...');
-      const bcrypt = require('bcrypt');
-      const hash = await bcrypt.hash('SecurePass123', 12);
+    // 6. Seed Default Users (Upsert pattern for reliable role provisioning)
+    console.log('👤 Synchronizing production identities...');
+    const bcrypt = require('bcrypt');
+    const hash = await bcrypt.hash('SecurePass123', 12);
 
-      // Seed Client
-      await pool.query(`
-        INSERT INTO banking.users (customer_id, account_number, full_name, email, password_hash, balance, role)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
-      `, ['CUST7742', 'ACC-921-008', 'John Doe', 'john@bank.com', hash, 25400.50, 'CLIENT']);
+    // Ensure Client exists
+    await pool.query(`
+      INSERT INTO banking.users (customer_id, account_number, full_name, email, password_hash, balance, role)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
+      ON CONFLICT (email) DO UPDATE SET role = EXCLUDED.role
+    `, ['CUST7742', 'ACC-921-008', 'John Doe', 'john@bank.com', hash, 25400.50, 'CLIENT']);
 
-      // Seed Staff
-      await pool.query(`
-        INSERT INTO banking.users (customer_id, account_number, full_name, email, password_hash, role)
-        VALUES ($1, $2, $3, $4, $5, $6)
-      `, ['EMP-101', 'OFFICE-MAIN', 'Bank Admin', 'admin@bank.com', hash, 'STAFF']);
-    }
+    // Ensure Staff exists
+    await pool.query(`
+      INSERT INTO banking.users (customer_id, account_number, full_name, email, password_hash, role)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (email) DO UPDATE SET role = EXCLUDED.role
+    `, ['EMP-101', 'OFFICE-MAIN', 'Bank Admin', 'admin@bank.com', hash, 'STAFF']);
+
+    console.log('✅ Database Initialization & Role Sync Complete.');
 
     console.log('✅ Database Initialization Complete.');
   } catch (err) {
