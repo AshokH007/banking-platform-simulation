@@ -1,48 +1,65 @@
-# Professional B2C Banking Platform Simulation
+# B2C Digital Banking Platform Simulation
 
-A high-fidelity simulation of a consumer banking platform, engineered to replicate the architecture and security constraints of real fintech systems.
+## Overview
+A production-hardened B2C consumer banking web platform simulation designed for security, auditability, and data isolation. This project demonstrates high-fidelity Fintech engineering standards, utilizing a shared database infrastructure with strict schema isolation.
 
-## Architecture & Security
+## Core Principles
+- **No Self-Registration**: Customer onboarding is a controlled internal process. No public signup interfaces are exposed to the internet.
+- **Identity Isolation**: All sensitive data is derived exclusively from cryptographic JWT claims.
+- **Stateful Session Control**: JWTs are short-lived (30 minutes) and backed by a database revocation layer for immediate session termination.
 
-### Schema Isolation
-This application operates within a **dedicated `banking` schema** in a shared PostgreSQL database. This ensures strict isolation from other applications (e.g., legacy systems) co-located in the same database instance.
-- **Namespace**: `banking.*`
-- **Tables**: `banking.users`, `banking.auth_tokens`
+## System Architecture
 
-### Authentication Model
-- **Stateless API, Stateful Session**: Uses JWTs for request signing, but maintains server-side state in `banking.auth_tokens` to enable immediate revocation (Global Logout).
-- **Token Policies**: 
-  - Short-lived access tokens (15m).
-  - Rotated logic (not fully implemented in sim, but supported by schema).
+### 1. Database & Schema
+The platform operates on a dedicated `banking` schema within a shared PostgreSQL database.
+- **Schema**: `banking`
+- **Isolation**: Strictly isolated from other system tables.
+- **Security**: Enforced SSL and parameterized queries.
 
-### Security features
-- **Immutable Identifiers**: Customer IDs and Account Numbers are system-generated and immutable.
-- **Read-Only Balance**: Balance modifications are strictly controlled via transaction logs (future scope), currently exposed as read-only.
+### 2. Onboarding Workflow
+New customers are provisioned via internal security tools.
+- **Bank-Issued Identifiers**: Immutable `customer_id` and `account_number` are generated upon provisioning.
+- **Credential Storage**: Bcrypt (rounds: 12) hashing for data-at-rest protection.
 
-## Setup Instructions
+### 3. Authentication Protocol
+- **Method**: Bearer JWT.
+- **Revocation Model**: Stateful tracking in `banking.auth_tokens`.
+- **Validation Pipeline**:
+  1. Header Parsing
+  2. Signature Verification
+  3. Database Revocation Status Check
+  4. Expiry Validation
 
-### 1. Database Configuration
-Ensure your PostgreSQL connection string has permissions to create schemas.
-Update `server/.env`:
-```env
-DATABASE_URL=postgres://user:password@host:port/dbname?sslmode=require
-```
+## API Specifications
 
-### 2. Backend Initialization
-```bash
-cd server
-npm install
-node src/scripts/seed.js # Creates 'banking' schema and demo user
-npm run dev
-```
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| POST | `/api/auth/login` | Authenticate via email/customer_id |
+| POST | `/api/auth/logout` | Terminate session and revoke token |
+| GET | `/api/account/profile` | Retrieve authenticated identity |
+| GET | `/api/account/balance` | Retrieve real-time account ledger |
 
-### 3. Frontend Initialization
-```bash
-cd client
-npm install
-npm run dev
-```
+## Deployment & Setup
 
-## Internal Testing Credentials
-- **User**: `demo@example.com`
-- **Pass**: `password123`
+### 1. Database Infrastructure
+- Provision Managed PostgreSQL (e.g., Aiven).
+- Apply `schema.sql` to initialize the `banking` namespace.
+
+### 2. Backend Deployment (Render.com)
+1. **Connect Repository**: Point Render to your GitHub repo.
+2. **Root Directory**: `server`
+3. **Build Command**: `npm install`
+4. **Start Command**: `npm start`
+5. **Environment Variables**:
+   - `DATABASE_URL`: Connection string.
+   - `JWT_SECRET`: Random 256-bit key.
+   - `FRONTEND_URL`: URL of your deployed frontend.
+
+### 3. Frontend Deployment (Vercel/Netlify)
+1. **Root Directory**: `client`
+2. **Build Command**: `npm run build`
+3. **Environment Variables**:
+   - `VITE_API_URL`: The URL of your live Render backend.
+
+---
+© 2026 FinTech Solutions Corp. Professional Internal Build.

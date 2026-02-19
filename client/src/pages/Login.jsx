@@ -1,92 +1,87 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { clsx } from 'clsx';
 
 const Login = () => {
-    const [email, setEmail] = useState('');
+    const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
-    const [loading, setLoading] = useState(false);
-
-    const { login } = useAuth();
-    const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
+    const { login, error } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setError('');
-        setLoading(true);
-
-        const result = await login(email, password);
-
-        if (result.success) {
-            navigate('/dashboard');
-        } else {
-            setError(result.message);
-        }
-        setLoading(false);
+        setIsLoading(true);
+        await login(identifier, password);
+        setIsLoading(false);
     };
 
     return (
-        <div className="flex items-center justify-center min-h-[80vh]">
-            <div className="w-full max-w-md">
-                <div className="mb-8 text-center">
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Welcome Back</h1>
-                    <p className="mt-2 text-slate-600">Securely sign in to your accounts</p>
+        <div className="min-h-[80vh] flex items-center justify-center p-4">
+            <div className="max-w-md w-full animate-in fade-in duration-700">
+                <div className="text-center mb-10">
+                    <h1 className="text-3xl font-semibold tracking-tight text-slate-900 mb-2">
+                        Secure Customer Login
+                    </h1>
+                    <p className="text-slate-500 text-sm">
+                        Please enter your authenticated credentials to manage your accounts.
+                    </p>
                 </div>
 
-                <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8">
+                <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8 md:p-10">
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {error && (
-                            <div className="bg-red-50 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center">
-                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                {error}
-                            </div>
-                        )}
-
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                            <label className="block text-xs font-medium uppercase tracking-wider text-slate-500 mb-2">
+                                Email or Customer ID
+                            </label>
                             <input
-                                id="email"
-                                type="email"
+                                type="text"
                                 required
-                                className="input-field"
-                                placeholder="you@example.com"
-                                value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900/40 transition-all duration-200 placeholder:text-slate-300"
+                                placeholder="Required"
+                                value={identifier}
+                                onChange={(e) => setIdentifier(e.target.value)}
                             />
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">Password</label>
+                            <label className="block text-xs font-medium uppercase tracking-wider text-slate-500 mb-2">
+                                Password
+                            </label>
                             <input
-                                id="password"
                                 type="password"
                                 required
-                                className="input-field"
+                                className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900/40 transition-all duration-200 placeholder:text-slate-300"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                             />
                         </div>
 
+                        {error && (
+                            <div className="p-4 rounded-xl bg-red-50 text-red-600 text-sm font-medium border border-red-100">
+                                {error}
+                            </div>
+                        )}
+
                         <button
                             type="submit"
-                            disabled={loading}
-                            className={`btn-primary flex justify-center items-center ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                            disabled={isLoading}
+                            className={clsx(
+                                "w-full bg-slate-900 text-white font-semibold py-4 rounded-xl transition-all duration-300 transform active:scale-[0.98]",
+                                "hover:bg-slate-800 hover:shadow-lg hover:shadow-slate-900/20",
+                                "disabled:opacity-50 disabled:cursor-not-allowed"
+                            )}
                         >
-                            {loading ? (
-                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                            ) : 'Sign In'}
+                            {isLoading ? 'Verifying Secure Access...' : 'Sign In'}
                         </button>
                     </form>
-                </div>
 
-                <p className="mt-8 text-center text-sm text-slate-500">
-                    Forgot your credentials? Contact <a href="#" className="font-medium text-slate-900 hover:underline">Support</a>.
-                </p>
+                    <div className="mt-8 pt-8 border-t border-slate-50 text-center">
+                        <p className="text-xs text-slate-400">
+                            Need assistance? Contact our secure support desk.
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     );

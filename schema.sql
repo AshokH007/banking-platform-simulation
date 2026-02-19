@@ -1,14 +1,14 @@
--- Enable UUID extension (public schema usually, or banking if allow)
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- FinTech Banking Platform - Database Schema
+-- Architecture: Isolated schema to support shared database infrastructure
 
--- Create dedicated schema
 CREATE SCHEMA IF NOT EXISTS banking;
 
--- Users Table in banking schema
+-- 1. Users Table
+-- Stores core customer identity and account state
 CREATE TABLE IF NOT EXISTS banking.users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    customer_id VARCHAR(20) UNIQUE NOT NULL, -- Bank issued, immutable
-    account_number VARCHAR(20) UNIQUE NOT NULL, -- Bank issued, immutable
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    customer_id VARCHAR(20) UNIQUE NOT NULL,      -- Bank-issued (e.g., CUST1001)
+    account_number VARCHAR(20) UNIQUE NOT NULL,   -- Bank-issued (e.g., ACC890214)
     full_name VARCHAR(100) NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -17,9 +17,10 @@ CREATE TABLE IF NOT EXISTS banking.users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Auth Tokens Table in banking schema
+-- 2. Auth Tokens Table
+-- Manages session lifecycle and stateful revocation
 CREATE TABLE IF NOT EXISTS banking.auth_tokens (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES banking.users(id) ON DELETE CASCADE,
     token TEXT NOT NULL,
     issued_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -28,6 +29,7 @@ CREATE TABLE IF NOT EXISTS banking.auth_tokens (
     UNIQUE(token)
 );
 
--- Indexes
-CREATE INDEX IF NOT EXISTS idx_banking_auth_tokens_token ON banking.auth_tokens(token);
-CREATE INDEX IF NOT EXISTS idx_banking_users_email ON banking.users(email);
+-- Indices for performance
+CREATE INDEX IF NOT EXISTS idx_users_email ON banking.users(email);
+CREATE INDEX IF NOT EXISTS idx_users_customer_id ON banking.users(customer_id);
+CREATE INDEX IF NOT EXISTS idx_auth_tokens_token ON banking.auth_tokens(token);

@@ -1,107 +1,106 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import api from '../api/axios';
+import axios from 'axios';
 
 const Dashboard = () => {
     const { user } = useAuth();
-    const [balance, setBalance] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [accountData, setAccountData] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const fetchBalance = async () => {
+            const API_BASE = import.meta.env.VITE_API_URL || '';
             try {
-                const { data } = await api.get('/account/balance');
-                setBalance(data.balance);
-            } catch (error) {
-                console.error('Failed to fetch balance', error);
+                const response = await axios.get(`${API_BASE}/api/account/balance`);
+                setAccountData(response.data);
+            } catch (err) {
+                console.error('Failed to fetch balance');
             } finally {
-                setLoading(false);
+                setIsLoading(false);
             }
         };
-
         fetchBalance();
     }, []);
 
-    const formatDate = (dateString) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-    };
-
-    const formatCurrency = (amount) => {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-        }).format(amount);
-    };
+    if (isLoading) {
+        return (
+            <div className="min-h-[60vh] flex items-center justify-center">
+                <div className="w-8 h-8 border-2 border-slate-900 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        );
+    }
 
     return (
-        <div className="space-y-8 animate-fade-in">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Main Balance Card */}
-                <div className="md:col-span-2 card bg-slate-900 text-white border-transparent">
-                    <div className="flex justify-between items-start mb-8">
-                        <div>
-                            <p className="text-slate-400 text-sm font-medium uppercase tracking-wider">Total Balance</p>
-                            <h2 className="text-4xl font-bold mt-2">
-                                {loading ? (
-                                    <div className="h-10 w-48 bg-slate-800 rounded animate-pulse"></div>
-                                ) : (
-                                    formatCurrency(balance)
-                                )}
-                            </h2>
-                        </div>
-                        <div className="bg-slate-800 p-2 rounded-lg">
-                            <svg className="w-6 h-6 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
+        <div className="max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {/* Account Header */}
+            <div className="mb-12">
+                <h1 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-400 mb-2">
+                    Primary Banking Account
+                </h1>
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <h2 className="text-4xl font-semibold text-slate-900 tracking-tight">
+                            {user?.fullName}
+                        </h2>
+                        <p className="text-slate-500 mt-1 font-medium">
+                            Customer ID: <span className="text-slate-900">{user?.customerId}</span>
+                        </p>
                     </div>
-
-                    <div className="flex justify-between items-end">
-                        <div>
-                            <p className="text-slate-400 text-xs">Account Number</p>
-                            <p className="font-mono text-slate-200 mt-1 tracking-wider">
-                                {user?.account_number || '•••• •••• ••••'}
-                            </p>
-                        </div>
-                        <div className="text-right">
-                            <span className="inline-block bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded-full font-medium border border-green-500/20">
-                                Active Status
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Profile Card */}
-                <div className="card">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-6">Profile Details</h3>
-
-                    <div className="space-y-4">
-                        <div>
-                            <p className="text-slate-500 text-xs uppercase font-semibold">Full Name</p>
-                            <p className="text-slate-900 font-medium">{user?.full_name}</p>
-                        </div>
-                        <div>
-                            <p className="text-slate-500 text-xs uppercase font-semibold">Customer ID</p>
-                            <p className="text-slate-900 font-medium">{user?.customer_id}</p>
-                        </div>
-                        <div>
-                            <p className="text-slate-500 text-xs uppercase font-semibold">Email</p>
-                            <p className="text-slate-900 font-medium">{user?.email}</p>
-                        </div>
-                        <div className="pt-4 border-t border-slate-100 mt-4">
-                            <p className="text-slate-400 text-xs">Member since {formatDate(user?.created_at)}</p>
-                        </div>
+                    <div className="bg-slate-50 px-6 py-4 rounded-2xl border border-slate-100 self-start md:self-auto">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1">
+                            Account Number
+                        </p>
+                        <p className="text-lg font-mono font-medium text-slate-900">
+                            {accountData?.account_number}
+                        </p>
                     </div>
                 </div>
             </div>
 
-            {/* Recent Activity Placeholder */}
-            <div className="card">
-                <h3 className="text-lg font-semibold text-slate-900 mb-6">Recent Activity</h3>
-                <div className="text-center py-12 text-slate-500 bg-slate-50 rounded-lg border border-dashed border-slate-300">
-                    <p>No recent transactions to display.</p>
+            {/* Balance Card */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="md:col-span-2 bg-slate-900 rounded-[2rem] p-10 text-white shadow-2xl shadow-slate-900/20 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 transform group-hover:scale-110 transition-transform duration-700">
+                        <svg className="w-32 h-32" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1.41 16.09V20h-2.82v-1.91c-1.54-.13-3.03-.66-4.32-1.58l1.32-2.11c1.07.72 2.3 1.14 3.51 1.21.94.05 1.7-.19 2.06-.55.33-.33.39-.77.21-1.22-.3-.72-1.12-1.2-3.15-2.06-2.26-.96-3.76-2.03-4.14-3.87-.21-1.01-.06-2 .5-2.85.69-1.04 1.83-1.68 3.09-1.89V3h2.82v1.89c1.23.1 2.36.42 3.33.94l-1.14 2.1c-.81-.4-1.63-.61-2.45-.63-.94-.03-1.64.21-2.02.6-.28.29-.38.64-.28 1.07.13.51.59.95 2.1 1.6 2.37.99 3.86 2.01 4.3 3.93.18.79.16 1.74-.1 2.51-.57 1.61-1.92 2.72-3.88 2.98z" />
+                        </svg>
+                    </div>
+
+                    <p className="text-slate-400 font-medium uppercase tracking-widest text-xs mb-4">
+                        Available Balance
+                    </p>
+                    <div className="flex items-baseline gap-2">
+                        <span className="text-2xl text-slate-400 font-light">$</span>
+                        <span className="text-6xl font-bold tracking-tighter">
+                            {parseFloat(accountData?.balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </span>
+                    </div>
+
+                    <div className="mt-10 flex gap-4">
+                        <button className="bg-white/10 hover:bg-white/20 transition-colors px-6 py-3 rounded-xl text-sm font-semibold backdrop-blur-md">
+                            Account Details
+                        </button>
+                        <button className="bg-white/10 hover:bg-white/20 transition-colors px-6 py-3 rounded-xl text-sm font-semibold backdrop-blur-md">
+                            Statements
+                        </button>
+                    </div>
+                </div>
+
+                {/* Quick Actions / Activity Placeholder */}
+                <div className="space-y-6">
+                    <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm">
+                        <h3 className="text-slate-900 font-bold text-lg mb-6 tracking-tight">System Status</h3>
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                <p className="text-sm text-slate-600 font-medium whitespace-nowrap">Ledger Synchronized</p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                <p className="text-sm text-slate-600 font-medium whitespace-nowrap">Session Security: High</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

@@ -12,8 +12,10 @@ if (!connectionString) {
 
 const pool = new Pool({
   connectionString: connectionString ? connectionString.replace('?sslmode=require', '') : connectionString,
-  ssl: {
-    rejectUnauthorized: false,
+  ssl: isProduction ? {
+    rejectUnauthorized: false, // Standard for many managed PostgreSQL services
+  } : {
+    rejectUnauthorized: false // Keep consistent with seed logic which requires it even locally for Aiven
   }
 });
 
@@ -22,7 +24,9 @@ pool.query('SELECT NOW()', (err, res) => {
   if (err) {
     console.error('Database connection error:', err);
   } else {
-    console.log('Database connected successfully:', res.rows[0].now);
+    if (!isProduction) {
+      console.log('Database connected successfully:', res.rows[0].now);
+    }
   }
 });
 

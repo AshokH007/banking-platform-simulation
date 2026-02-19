@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: banking-platform-api
+    runtime: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false # Set in Render Dashboard
+      - key: JWT_SECRET
+        sync: false # Set in Render Dashboard
+      - key: NODE_ENV
+        value: production
+      - key: FRONTEND_URL
+        sync: false # Set in Render Dashboard (e.g. your Netlify/Vercel URL)
+      - key: TOKEN_EXPIRY
+        value: 30m
+    rootDir: server

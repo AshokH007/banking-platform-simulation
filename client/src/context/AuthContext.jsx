@@ -1,76 +1,63 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import api from '../api/axios';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import axios from 'axios';
 
-const AuthContext = createContext();
-
-export const useAuth = () => useContext(AuthContext);
+const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
-    const [token, setToken] = useState(localStorage.getItem('token'));
-    const [loading, setLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    // Initialize Auth State
+    // Dynamic API URL for production vs development
+    const API_BASE = import.meta.env.VITE_API_URL || '';
+
     useEffect(() => {
-        const initAuth = async () => {
-            if (token) {
-                try {
-                    // Verify token by fetching profile
-                    // This ensures the user state is populated on refresh
-                    const { data } = await api.get('/account/profile');
-                    // We can also decode the token client-side if we trust it, but verification is better
-                    // We'll construct a user object from the profile response
-                    setUser(data);
-                } catch (error) {
-                    console.error('Session restoration failed', error);
-                    logout();
-                }
-            }
-            setLoading(false);
-        };
+        const storedUser = localStorage.getItem('banking_user');
+        const token = localStorage.getItem('banking_token');
+        if (storedUser && token) {
+            setUser(JSON.parse(storedUser));
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        }
+        setIsLoading(false);
+    }, []);
 
-        initAuth();
-    }, [token]);
-
-    const login = async (email, password) => {
+    const login = async (identifier, password) => {
+        setError(null);
         try {
-            const { data } = await api.post('/auth/login', { email, password });
-            localStorage.setItem('token', data.token);
-            setToken(data.token);
-            setUser(data.user);
-            return { success: true };
-        } catch (error) {
-            console.error('Login failed', error);
-            return {
-                success: false,
-                message: error.response?.data?.message || 'Login failed'
-            };
+            const response = await axios.post(`${API_BASE}/api/auth/login`, { identifier, password });
+            const { token, user } = response.data;
+
+            localStorage.setItem('banking_token', token);
+            localStorage.setItem('banking_user', JSON.stringify(user));
+            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+            setUser(user);
+            return true;
+        } catch (err) {
+            setError(err.response?.data?.message || 'Authentication service failure');
+            return false;
         }
     };
 
     const logout = async () => {
         try {
-            if (token) await api.post('/auth/logout');
+            await axios.post(`${API_BASE}/api/auth/logout`);
         } catch (err) {
-            console.warn("Logout API call failed", err);
+            console.error('Logout revocation failed');
         } finally {
-            localStorage.removeItem('token');
-            setToken(null);
+            localStorage.removeItem('banking_token');
+            localStorage.removeItem('banking_user');
+            delete axios.defaults.headers.common['Authorization'];
             setUser(null);
+            window.location.href = '/login';
         }
     };
 
-    const value = {
-        user,
-        token,
-        loading,
-        login,
-        logout
-    };
-
     return (
-        <AuthContext.Provider value={value}>
-            {!loading && children}
+        <AuthContext.Provider value={{ user, login, logout, isLoading, error }}>
+            {children}
         </AuthContext.Provider>
     );
 };
+
+export const useAuth = () => useContext(AuthContext);

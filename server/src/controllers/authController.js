@@ -1,51 +1,64 @@
 const { pool } = require('../db');
 const { comparePassword, generateToken } = require('../utils/security');
+const jwt = require('jsonwebtoken');
 
+/**
+ * PRINCIPAL AUTH CONTROLLER
+ * Handles login via identifier (Email or Customer ID)
+ */
 const login = async (req, res, next) => {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body; // 'identifier' can be email or customer_id
 
-    if (!email || !password) {
-        return res.status(400).json({ error: 'Bad Request', message: 'Email and password are required' });
+    if (!identifier || !password) {
+        return res.status(400).json({
+            error: 'Bad Request',
+            message: 'Credentials are required'
+        });
     }
 
     try {
-        // 1. Find user in banking schema
-        const userResult = await pool.query('SELECT * FROM banking.users WHERE email = $1', [email]);
+        // Query users by email OR customer_id
+        const userResult = await pool.query(
+            'SELECT * FROM banking.users WHERE (email = $1 OR customer_id = $1)',
+            [identifier]
+        );
         const user = userResult.rows[0];
 
         if (!user) {
-            // Return 401 for generic invalid credentials
             return res.status(401).json({ error: 'Unauthorized', message: 'Invalid credentials' });
         }
 
         if (user.status !== 'ACTIVE') {
-            return res.status(403).json({ error: 'Forbidden', message: 'Account is not active' });
+            return res.status(403).json({ error: 'Forbidden', message: 'Account access is restricted' });
         }
 
-        // 2. Check password
         const isMatch = await comparePassword(password, user.password_hash);
         if (!isMatch) {
             return res.status(401).json({ error: 'Unauthorized', message: 'Invalid credentials' });
         }
 
-        // 3. Generate Token
-        const token = generateToken(user);
-        const decoded = require('jsonwebtoken').decode(token); // Get exp for DB
+        // Generate Short-lived Token (30 minutes)
+        const token = jwt.sign(
+            { id: user.id, email: user.email, customer_id: user.customer_id },
+            process.env.JWT_SECRET,
+            { expiresIn: '30m' }
+        );
 
-        // 4. Store Token in banking schema
+        const decoded = jwt.decode(token);
+
+        // State-backed Session Persistence
         await pool.query(
             'INSERT INTO banking.auth_tokens (user_id, token, expires_at) VALUES ($1, $2, to_timestamp($3))',
             [user.id, token, decoded.exp]
         );
 
-        // 5. Response
         res.json({
             token,
             user: {
-                id: user.id,
                 fullName: user.full_name,
                 email: user.email,
-                customer_id: user.customer_id
+                customerId: user.customer_id,
+                accountNumber: user.account_number
             }
         });
 
@@ -56,10 +69,10 @@ const login = async (req, res, next) => {
 
 const logout = async (req, res, next) => {
     try {
-        const token = req.token; // Attached by auth middleware
-        // Revoke token in banking schema
+        const token = req.token;
+        // Stateful revocation
         await pool.query('UPDATE banking.auth_tokens SET revoked = true WHERE token = $1', [token]);
-        res.json({ message: 'Logged out successfully' });
+        res.json({ message: 'Session terminated successfully' });
     } catch (error) {
         next(error);
     }
