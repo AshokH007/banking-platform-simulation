@@ -1,7 +1,7 @@
 services:
   # 1. Backend API Service
   - type: web
-    name: banking-platform-simulation
+    name: banking-platform-api
     plan: free
     runtime: node
     buildCommand: npm install
