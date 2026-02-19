@@ -29,17 +29,25 @@ app.use(cors({
         // Allow requests with no origin (like mobile apps or curl requests)
         if (!origin) return callback(null, true);
 
-        // Check exact match or hostname match
-        const isAllowed = allowedOrigins.some(ao => ao === origin || origin.includes(ao));
+        // Normalize origin and allowedOrigins for matching
+        const normalizedOrigin = origin.toLowerCase();
+        const isAllowed = allowedOrigins.some(ao => {
+            if (!ao) return false;
+            const normalizedAo = ao.toLowerCase();
+            return normalizedOrigin === normalizedAo ||
+                normalizedOrigin.replace('https://', '').replace('http://', '') === normalizedAo.replace('https://', '').replace('http://', '');
+        });
 
         if (isAllowed || process.env.NODE_ENV === 'development') {
             callback(null, true);
         } else {
-            console.warn(`[CORS Denied] Origin: ${origin}`);
+            console.error(`[CORS REJECTED] Origin: ${origin} | Allowed: ${allowedOrigins.join(', ')}`);
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());

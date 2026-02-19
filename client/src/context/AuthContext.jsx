@@ -15,6 +15,7 @@ export const AuthProvider = ({ children }) => {
         : rawApiUrl;
 
     useEffect(() => {
+        console.log('🏦 BankSim API Entry Point:', API_BASE);
         try {
             const storedUser = localStorage.getItem('banking_user');
             const token = localStorage.getItem('banking_token');
