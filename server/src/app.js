@@ -100,7 +100,14 @@ app.get('/health', async (req, res) => {
                 port: dbPool.options.port,
                 user: dbPool.options.user,
                 database: dbPool.options.database,
-                has_connection_string: !!dbPool.options.connectionString
+                has_connection_string: !!dbPool.options.connectionString,
+                connection_string_prefix: dbPool.options.connectionString ? dbPool.options.connectionString.substring(0, 15) : 'none'
+            },
+            env_metadata: {
+                DATABASE_URL_length: process.env.DATABASE_URL?.length || 0,
+                DATABASE_URL_is_base: process.env.DATABASE_URL === 'base',
+                PGHOST: process.env.PGHOST || 'not_set',
+                HOST: process.env.HOST || 'not_set'
             },
             env_keys: Object.keys(process.env).filter(key => !key.includes('SECRET') && !key.includes('PASSWORD') && !key.includes('KEY')),
             schema: 'uninitialized',
