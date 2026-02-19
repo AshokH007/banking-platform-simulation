@@ -100,8 +100,8 @@ app.get('/health', async (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/account', authenticate, accountRoutes);
-app.use('/api/transactions', authenticate, transactionRoutes);
+app.use('/api/account', accountRoutes);
+app.use('/api/transactions', transactionRoutes);
 app.use('/api/staff', staffRoutes);
 
 // 404 Handler
