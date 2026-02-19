@@ -7,6 +7,9 @@ const morgan = require('morgan');
 const authRoutes = require('./routes/auth');
 const accountRoutes = require('./routes/account');
 
+// Database connection
+const { pool } = require('./db');
+
 const app = express();
 
 // Middleware
