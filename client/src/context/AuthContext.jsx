@@ -9,16 +9,25 @@ export const AuthProvider = ({ children }) => {
     const [error, setError] = useState(null);
 
     // Dynamic API URL for production vs development
-    const API_BASE = import.meta.env.VITE_API_URL || '';
+    const rawApiUrl = import.meta.env.VITE_API_URL || '';
+    const API_BASE = (rawApiUrl && !rawApiUrl.startsWith('http'))
+        ? `https://${rawApiUrl}`
+        : rawApiUrl;
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('banking_user');
-        const token = localStorage.getItem('banking_token');
-        if (storedUser && token) {
-            setUser(JSON.parse(storedUser));
-            axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        try {
+            const storedUser = localStorage.getItem('banking_user');
+            const token = localStorage.getItem('banking_token');
+            if (storedUser && token && storedUser !== 'undefined') {
+                setUser(JSON.parse(storedUser));
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            }
+        } catch (err) {
+            console.error('Core Hydration Failure', err);
+            localStorage.clear();
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     }, []);
 
     const login = async (identifier, password) => {
