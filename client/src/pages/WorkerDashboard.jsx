@@ -2,7 +2,29 @@ import React from 'react';
 import { useAuth } from '../context/AuthContext';
 
 const WorkerDashboard = () => {
-    const { user } = useAuth();
+    const { user, API_BASE } = useAuth();
+    const [view, setView] = useState('metrics'); // metrics or users
+    const [customers, setCustomers] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [showModal, setShowModal] = useState(false);
+
+    useEffect(() => {
+        if (view === 'users') {
+            fetchCustomers();
+        }
+    }, [view]);
+
+    const fetchCustomers = async () => {
+        setIsLoading(true);
+        try {
+            const res = await axios.get(`${API_BASE}/api/staff/users`);
+            setCustomers(res.rows || res.data); // Resilient to different response structures
+        } catch (err) {
+            console.error('Failed to fetch customers');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const stats = [
         { label: 'Active Users', value: '1,284', grow: '+12%' },
@@ -25,58 +47,109 @@ const WorkerDashboard = () => {
                         Welcome back, {firstName}
                     </h1>
                 </div>
-                <div className="text-right">
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Session ID</p>
-                    <p className="text-sm font-mono text-slate-600 bg-white px-3 py-1 rounded-lg border border-slate-200">AUTH-PRD-OX92</p>
+                <div className="text-right flex flex-col items-end gap-3">
+                    <p className="text-slate-400 text-xs font-bold uppercase tracking-widest bg-white px-3 py-1 rounded-full border border-slate-100">
+                        {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </p>
+                    <div className="flex bg-slate-100 p-1 rounded-xl">
+                        <button
+                            onClick={() => setView('metrics')}
+                            className={clsx(
+                                "px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
+                                view === 'metrics' ? "bg-white text-indigo-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                            )}>
+                            Metrics
+                        </button>
+                        <button
+                            onClick={() => setView('users')}
+                            className={clsx(
+                                "px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all",
+                                view === 'users' ? "bg-white text-indigo-900 shadow-sm" : "text-slate-400 hover:text-slate-600"
+                            )}>
+                            User management
+                        </button>
+                    </div>
                 </div>
             </header>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-                {stats.map((stat) => (
-                    <div key={stat.label} className="bg-white p-6 rounded-2xl border border-indigo-100 shadow-sm shadow-indigo-100/20">
-                        <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">{stat.label}</p>
-                        <div className="flex items-baseline justify-between">
-                            <h3 className="text-2xl font-bold text-slate-900">{stat.value}</h3>
-                            <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">{stat.grow}</span>
+        </div>
+                    </div >
+                ))}
+            </div >
+
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
+            <h3 className="text-lg font-bold text-slate-900 mb-6">Recent Activity Logs</h3>
+            <div className="space-y-4">
+                {[
+                    { user: 'John Doe', action: 'Login Success', time: '2m ago' },
+                    { user: 'System', action: 'Daily Backup Complete', time: '1h ago' },
+                    { user: 'Jane Smith', action: 'Transfer $500.00', time: '3h ago' }
+                ].map((log, i) => (
+                    <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-slate-50">
+                        <div>
+                            <p className="text-sm font-bold text-slate-900">{log.user}</p>
+                            <p className="text-xs text-slate-500">{log.action}</p>
                         </div>
+                        <span className="text-[10px] font-mono text-slate-400">{log.time}</span>
                     </div>
                 ))}
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-2 bg-white rounded-3xl border border-slate-100 shadow-sm p-8">
-                    <h3 className="text-lg font-bold text-slate-900 mb-6">Recent Activity Logs</h3>
-                    <div className="space-y-4">
-                        {[
-                            { user: 'John Doe', action: 'Login Success', time: '2m ago' },
-                            { user: 'System', action: 'Daily Backup Complete', time: '1h ago' },
-                            { user: 'Jane Smith', action: 'Transfer $500.00', time: '3h ago' }
-                        ].map((log, i) => (
-                            <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-slate-50">
-                                <div>
-                                    <p className="text-sm font-bold text-slate-900">{log.user}</p>
-                                    <p className="text-xs text-slate-500">{log.action}</p>
-                                </div>
-                                <span className="text-[10px] font-mono text-slate-400">{log.time}</span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                <div className="bg-slate-900 rounded-3xl p-8 text-white shadow-xl shadow-indigo-900/20">
-                    <h3 className="text-lg font-bold mb-6">Internal Tools</h3>
-                    <div className="space-y-3">
-                        {['Audit Customer Table', 'System Status Audit', 'Freeze All Accounts', 'Generate Compliance Report'].map(tool => (
-                            <button key={tool} className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-sm font-medium transition-all group">
-                                {tool}
-                                {tool === 'Freeze All Accounts' && <span className="ml-2 px-2 py-0.5 bg-red-500 text-[8px] rounded uppercase">Security</span>}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            </div>
         </div>
+
+        <div className="bg-slate-900 rounded-3xl p-8 text-white shadow-xl shadow-indigo-900/20">
+            <h3 className="text-lg font-bold mb-6">Internal Tools</h3>
+            <div className="space-y-3">
+                <h3 className="text-slate-900 font-bold text-xl">Customer Directory</h3>
+                <p className="text-slate-400 text-xs font-medium uppercase tracking-widest mt-1">Manage bank identities</p>
+            </div>
+            <button
+                onClick={() => setShowModal(true)}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-bold shadow-lg shadow-indigo-200 transition-all active:scale-95">
+                + Onboard Customer
+            </button>
+        </div>
+
+        <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+                <thead>
+                    <tr className="bg-slate-50 text-slate-400 text-[10px] uppercase font-bold tracking-widest">
+                        <th className="px-8 py-4">Customer</th>
+                        <th className="px-8 py-4">Account ID</th>
+                        <th className="px-8 py-4">Balance</th>
+                        <th className="px-8 py-4">Status</th>
+                        <th className="px-8 py-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                    {customers.map(c => (
+                        <tr key={c.id} className="hover:bg-slate-50/50 transition-colors group">
+                            <td className="px-8 py-5">
+                                <p className="text-sm font-bold text-slate-900">{c.full_name}</p>
+                                <p className="text-xs text-slate-400">{c.email}</p>
+                            </td>
+                            <td className="px-8 py-5 font-mono text-xs text-slate-600">
+                                {c.account_number}
+                            </td>
+                            <td className="px-8 py-5">
+                                <p className="text-sm font-bold text-slate-900">${parseFloat(c.balance).toLocaleString()}</p>
+                            </td>
+                            <td className="px-8 py-5">
+                                <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded uppercase">Active</span>
+                            </td>
+                            <td className="px-8 py-5">
+                                <button className="text-indigo-600 hover:text-indigo-800 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">Manage</button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </div>
+            )}
+        </div >
     );
 };
 
 export default WorkerDashboard;
+```
