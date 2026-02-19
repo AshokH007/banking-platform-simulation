@@ -4,6 +4,22 @@ import { useAuth } from '../context/AuthContext';
 import { clsx } from 'clsx';
 
 const Login = () => {
+    const [identifier, setIdentifier] = useState('');
+    const [password, setPassword] = useState('');
+    const [role, setRole] = useState('CLIENT'); // CLIENT or STAFF
+    const [isLoading, setIsLoading] = useState(false);
+    const { login, error } = useAuth();
+    const navigate = useNavigate();
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsLoading(true);
+        const success = await login(identifier, password);
+        setIsLoading(false);
+        if (success) {
+            navigate('/dashboard');
+        }
+    };
 
     const isStaff = role === 'STAFF';
 
