@@ -33,4 +33,6 @@ services:
           type: web
           name: banking-platform-api
           property: host
+      - key: NODE_VERSION
+        value: 20
     rootDir: client
