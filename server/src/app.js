@@ -78,6 +78,7 @@ app.get('/health', async (req, res) => {
         res.status(200).json({
             status: 'ok',
             database: 'connected',
+            database_host: dbPool.options.host || 'unknown',
             schema: 'active',
             user_count: dbCheck.rows[0].count,
             timestamp: new Date()
@@ -87,6 +88,7 @@ app.get('/health', async (req, res) => {
         res.status(503).json({
             status: 'error',
             database: 'connected',
+            database_host: dbPool.options.host || 'unknown',
             schema: 'uninitialized',
             error: err.message,
             timestamp: new Date()
