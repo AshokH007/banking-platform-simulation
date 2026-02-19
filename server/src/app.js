@@ -68,9 +68,27 @@ app.get('/', (req, res) => {
     });
 });
 
-// Health Check
-app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'ok', timestamp: new Date() });
+// Enhanced Health Check & Schema Audit
+app.get('/health', async (req, res) => {
+    try {
+        const dbCheck = await pool.query('SELECT COUNT(*) FROM banking.users');
+        res.status(200).json({
+            status: 'ok',
+            database: 'connected',
+            schema: 'active',
+            user_count: dbCheck.rows[0].count,
+            timestamp: new Date()
+        });
+    } catch (err) {
+        console.error('[Health Check Failure]:', err.message);
+        res.status(503).json({
+            status: 'error',
+            database: 'connected',
+            schema: 'uninitialized',
+            error: err.message,
+            timestamp: new Date()
+        });
+    }
 });
 
 // Routes

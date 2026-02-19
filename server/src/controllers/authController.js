@@ -25,10 +25,18 @@ const login = async (req, res, next) => {
         const user = userResult.rows[0];
 
         if (!user) {
+            console.group('🏦 Authentication Failure Diagnostic');
+            console.error('Attempted login with identifier:', identifier);
+            console.error('Reason: User not found');
+            console.groupEnd();
             return res.status(401).json({ error: 'Unauthorized', message: 'Invalid credentials' });
         }
 
         if (user.status !== 'ACTIVE') {
+            console.group('🏦 Authentication Failure Diagnostic');
+            console.error('Attempted login for user:', user.email || user.customer_id);
+            console.error('Reason: Account status is', user.status);
+            console.groupEnd();
             return res.status(403).json({ error: 'Forbidden', message: 'Account access is restricted' });
         }
 
