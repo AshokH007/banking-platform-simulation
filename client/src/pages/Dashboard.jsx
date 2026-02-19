@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
+import TransactionList from '../components/TransactionList';
 
 const Dashboard = () => {
     const { user, API_BASE } = useAuth();
@@ -62,10 +60,6 @@ const Dashboard = () => {
             </div>
 
             {/* Balance Card */}
-            import TransactionList from '../components/TransactionList';
-
-            // ... (inside component return)
-            {/* Balance & Activity Section */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
                     {/* Balance Card */}
