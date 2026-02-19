@@ -21,12 +21,15 @@ const pool = new Pool({
 
 // Production Auto-Initialization
 async function initializeDatabase() {
-  console.log('📦 Checking Production Schema...');
+  console.log('📦 Initializing Production Database...');
   try {
-    // 1. Schema
+    // 1. Extensions
+    await pool.query('CREATE EXTENSION IF NOT EXISTS "pgcrypto"');
+
+    // 2. Schema
     await pool.query('CREATE SCHEMA IF NOT EXISTS banking');
 
-    // 2. Users Table
+    // 3. Users Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS banking.users (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -41,7 +44,7 @@ async function initializeDatabase() {
       )
     `);
 
-    // 3. Auth Tokens Table
+    // 4. Auth Tokens Table
     await pool.query(`
       CREATE TABLE IF NOT EXISTS banking.auth_tokens (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -54,7 +57,23 @@ async function initializeDatabase() {
       )
     `);
 
-    console.log('✅ Database Schema Synchronized.');
+    // 5. Indices
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_users_email ON banking.users(email)');
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_users_customer_id ON banking.users(customer_id)');
+
+    // 6. Seed Default User if empty
+    const userCount = await pool.query('SELECT COUNT(*) FROM banking.users');
+    if (userCount.rows[0].count === '0') {
+      console.log('👤 Seeding default production user...');
+      const bcrypt = require('bcrypt');
+      const hash = await bcrypt.hash('SecurePass123', 12);
+      await pool.query(`
+        INSERT INTO banking.users (customer_id, account_number, full_name, email, password_hash, balance)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `, ['CUST7742', 'ACC-921-008', 'John Doe', 'john@bank.com', hash, 25400.50]);
+    }
+
+    console.log('✅ Database Initialization Complete.');
   } catch (err) {
     console.error('❌ Database Initialization Failed:', err.message);
   }
