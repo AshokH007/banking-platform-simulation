@@ -78,7 +78,14 @@ app.get('/health', async (req, res) => {
         res.status(200).json({
             status: 'ok',
             database: 'connected',
-            database_host: dbPool.options.host || 'unknown',
+            database_config: {
+                host: dbPool.options.host,
+                port: dbPool.options.port,
+                user: dbPool.options.user,
+                database: dbPool.options.database,
+                has_connection_string: !!dbPool.options.connectionString
+            },
+            env_keys: Object.keys(process.env).filter(key => !key.includes('SECRET') && !key.includes('PASSWORD') && !key.includes('KEY')),
             schema: 'active',
             user_count: dbCheck.rows[0].count,
             timestamp: new Date()
@@ -88,7 +95,14 @@ app.get('/health', async (req, res) => {
         res.status(503).json({
             status: 'error',
             database: 'connected',
-            database_host: dbPool.options.host || 'unknown',
+            database_config: {
+                host: dbPool.options.host,
+                port: dbPool.options.port,
+                user: dbPool.options.user,
+                database: dbPool.options.database,
+                has_connection_string: !!dbPool.options.connectionString
+            },
+            env_keys: Object.keys(process.env).filter(key => !key.includes('SECRET') && !key.includes('PASSWORD') && !key.includes('KEY')),
             schema: 'uninitialized',
             error: err.message,
             timestamp: new Date()
