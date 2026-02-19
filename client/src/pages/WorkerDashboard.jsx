@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { clsx } from 'clsx';
 import OnboardCustomerModal from '../components/OnboardCustomerModal';
+import FundInjectionModal from '../components/FundInjectionModal';
 
 const WorkerDashboard = () => {
     const { user, API_BASE } = useAuth();
@@ -10,6 +11,8 @@ const WorkerDashboard = () => {
     const [customers, setCustomers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [showFundModal, setShowFundModal] = useState(false);
+    const [selectedAccount, setSelectedAccount] = useState('');
 
     useEffect(() => {
         if (view === 'users') {
@@ -163,7 +166,14 @@ const WorkerDashboard = () => {
                                             <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-[10px] font-bold rounded uppercase">Active</span>
                                         </td>
                                         <td className="px-8 py-5">
-                                            <button className="text-indigo-600 hover:text-indigo-800 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">Manage</button>
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedAccount(c.account_number);
+                                                    setShowFundModal(true);
+                                                }}
+                                                className="text-indigo-600 hover:text-indigo-800 text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                                                Inject Funds
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}
@@ -183,6 +193,14 @@ const WorkerDashboard = () => {
                 onClose={() => setShowModal(false)}
                 onSuccess={fetchCustomers}
                 API_BASE={API_BASE}
+            />
+
+            <FundInjectionModal
+                isOpen={showFundModal}
+                onClose={() => setShowFundModal(false)}
+                onSuccess={fetchCustomers}
+                API_BASE={API_BASE}
+                initialAccountNumber={selectedAccount}
             />
         </div>
     );
