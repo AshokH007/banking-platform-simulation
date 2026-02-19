@@ -8,7 +8,7 @@ const authRoutes = require('./routes/auth');
 const accountRoutes = require('./routes/account');
 
 // Database connection
-const { pool } = require('./db');
+const { pool: dbPool } = require('./db');
 
 const app = express();
 
@@ -74,7 +74,7 @@ app.get('/', (req, res) => {
 // Enhanced Health Check & Schema Audit
 app.get('/health', async (req, res) => {
     try {
-        const dbCheck = await pool.query('SELECT COUNT(*) FROM banking.users');
+        const dbCheck = await dbPool.query('SELECT COUNT(*) FROM banking.users');
         res.status(200).json({
             status: 'ok',
             database: 'connected',
