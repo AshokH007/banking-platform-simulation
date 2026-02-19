@@ -14,10 +14,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: FRONTEND_URL
-        fromService:
-          type: web
-          name: banking-platform-ui
-          property: url
+        value: https://banking-platform-ui.onrender.com
       - key: TOKEN_EXPIRY
         value: 30m
     rootDir: server
@@ -34,10 +31,7 @@ services:
         destination: /index.html
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: banking-platform-simulation
-          property: url
+        value: https://banking-platform-simulation.onrender.com
       - key: NODE_VERSION
         value: 20
     rootDir: client

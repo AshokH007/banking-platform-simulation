@@ -10,9 +10,15 @@ export const AuthProvider = ({ children }) => {
 
     // Dynamic API URL for production vs development
     const rawApiUrl = import.meta.env.VITE_API_URL || '';
-    const API_BASE = (rawApiUrl && !rawApiUrl.startsWith('http'))
-        ? `https://${rawApiUrl}`
-        : rawApiUrl;
+    let API_BASE = rawApiUrl;
+
+    if (rawApiUrl && !rawApiUrl.startsWith('http')) {
+        API_BASE = `https://${rawApiUrl}`;
+        // If it's the internal Render host, append the TLD
+        if (!rawApiUrl.includes('.')) {
+            API_BASE += '.onrender.com';
+        }
+    }
 
     useEffect(() => {
         console.log('🏦 BankSim API Entry Point:', API_BASE);
