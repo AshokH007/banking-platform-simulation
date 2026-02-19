@@ -36,6 +36,19 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 
+// Basic Root Route
+app.get('/', (req, res) => {
+    res.status(200).json({
+        message: 'Banking Platform API - Production Environment',
+        status: 'Active',
+        endpoints: {
+            health: '/health',
+            auth: '/api/auth',
+            account: '/api/account'
+        }
+    });
+});
+
 // Health Check
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date() });
